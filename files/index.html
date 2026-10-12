@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="fi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Matkalasku</title>
+<meta name="theme-color" content="#1f5f4a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Matkalasku">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%A7%BE%3C/text%3E%3C/svg%3E">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f6f6f3;--card:#fff;--tx:#1d1d1b;--mu:#6b6b66;--ln:#dcdcd6;--ac:#1f5f4a;--on:#fff}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161615;--card:#212120;--tx:#ecece8;--mu:#9a9a94;--ln:#3a3a37;--ac:#5fb596;--on:#0f1f19}}
+:root[data-theme="dark"]{--bg:#161615;--card:#212120;--tx:#ecece8;--mu:#9a9a94;--ln:#3a3a37;--ac:#5fb596;--on:#0f1f19}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:980px;margin:0 auto;padding:20px 14px 60px}
+h1{font-size:22px;margin:0 0 4px}h2{font-size:16px;margin:0 0 10px}
+.sub{color:var(--mu);margin:0 0 18px}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:14px;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+label{display:block;font-size:12px;color:var(--mu);margin-bottom:3px}
+input,select{width:100%;padding:7px 8px;border:1px solid var(--ln);border-radius:7px;background:var(--bg);color:var(--tx);font:inherit}
+.wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:720px}
+th{font-size:12px;color:var(--mu);text-align:left;font-weight:600;padding:0 4px 6px}
+td{padding:3px 4px;vertical-align:middle}
+td.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+button{font:inherit;padding:8px 13px;border-radius:8px;border:1px solid var(--ln);background:var(--card);color:var(--tx);cursor:pointer}
+button.p{background:var(--ac);color:var(--on);border-color:var(--ac);font-weight:600}
+button.x{padding:4px 8px;color:var(--mu)}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.tot{display:flex;justify-content:space-between;padding:4px 0}
+.tot.big{font-weight:700;font-size:17px;border-top:1px solid var(--ln);margin-top:6px;padding-top:8px}
+.note{color:var(--mu);font-size:13px;margin-top:8px}
+#msg{margin-top:10px;font-size:14px}
+.file{font-size:12px;max-width:170px}
+.auto{background:rgba(255,196,0,.25)!important}
+.dz{border:2px dashed var(--ln);border-radius:10px;padding:16px;text-align:center;color:var(--mu);cursor:pointer;margin-bottom:12px}
+.dz:hover,#recCard.drag .dz{border-color:var(--ac);color:var(--tx)}
+#recCard.drag{outline:2px dashed var(--ac);outline-offset:2px}
+</style></head><body><main>
+<h1>Matkalasku</h1>
+<p class="sub">Syötä kuun ajot ja kuitit, paina “Luo PDF”. Kuitit liitetään samaan PDF:ään automaattisesti. Tiedot tallentuvat tähän selaimeen.</p>
+
+<div class="card"><h2>Kirjaus</h2>
+<div class="grid">
+<div><label>Valitse kirjaus</label><select id="repSel"></select></div>
+<div><label>Nimi</label><input id="repName" placeholder="esim. Joulukuun matkat"></div>
+<div style="display:flex;align-items:end"><label style="display:flex;gap:6px;align-items:center;margin:0 0 8px;font-size:14px;color:var(--tx)"><input type="checkbox" id="repDone" style="width:auto"> Valmis</label></div>
+</div>
+<div class="bar"><button id="repNew">+ Uusi kirjaus</button><button id="repCopy">Kopioi seuraavalle kuukaudelle</button><button id="repDel">Poista kirjaus</button></div>
+<p class="note" id="saved"></p>
+<p class="note">Jokainen kirjaus (kuukausi) tallentuu omana kokonaisuutenaan. Valitse listasta se, johon haluat palata. Kaikki tiedot tallentuvat vain tähän selaimeen eivätkä lähde mihinkään. Ne eivät siirry laitteelta toiselle automaattisesti, joten käytä siirtoon varmuuskopiota.</p></div>
+
+<div class="card"><h2>Perustiedot</h2>
+<div class="grid">
+<div><label>Yritys</label><input data-s="company"></div>
+<div><label>Henkilö</label><input data-s="person"></div>
+<div><label>Rekisterinumero</label><input data-s="reg"></div>
+<div><label>Kuukausi</label><input type="month" id="month"></div>
+<div><label>Osapäiväraha (6 h tai yli) €</label><input type="number" step="0.01" data-s="rOsa"></div>
+<div><label>Kokopäiväraha (10 h tai yli) €</label><input type="number" step="0.01" data-s="rKoko"></div>
+<div><label>Kilometrikorvaus € / km</label><input type="number" step="0.01" data-s="rKm"></div>
+</div><p class="note" id="rateNote"></p></div>
+
+<div class="card"><h2>Ajot</h2>
+<div class="wrap"><table><thead><tr><th>Päivä</th><th>Kommentti</th><th>Reitti</th><th>Km</th><th>Kesto h</th><th>Päiväraha</th><th class="n">Km-korv.</th><th class="n">Päiväraha</th><th class="n">Yhteensä</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>
+<div class="bar"><button id="addT">+ Uusi ajo</button><button id="sortT">Järjestä päivämäärän mukaan</button></div>
+<p class="note">Päiväraha automaattisesti: 6 h – 9,99 h osapäiväraha, 10 h tai yli kokopäiväraha. Voit ohittaa valinnalla.</p></div>
+
+<div class="card" id="recCard"><h2>Kuitit ja käteislaskut</h2>
+<div class="dz" id="dz">Pudota kuitit tai laskut tähän (PDF, JPG, PNG) tai napauta valitaksesi. Jokaisesta tiedostosta tulee uusi rivi. PDF-laskujen päivä ja summa luetaan tekstistä automaattisesti, kuvista ne täytetään käsin.</div><input type="file" id="dzf" multiple accept="application/pdf,image/jpeg,image/png" hidden>
+<div class="wrap"><table style="min-width:620px"><thead><tr><th>Päivä</th><th>Kuvaus</th><th>Summa €</th><th>Liite (PDF / JPG / PNG)</th><th></th></tr></thead><tbody id="rb"></tbody></table></div>
+<div class="bar"><button id="addR">+ Uusi kuitti</button><button id="sortR">Järjestä päivämäärän mukaan</button></div>
+<p class="note">Tarkista, että päivä, summa ja kuvaus ovat oikein ennen PDF:n luontia. Keltaiseksi merkityt kentät on luettu PDF:n tekstistä automaattisesti, ja luku on arvio.</p></div>
+
+<div class="card"><h2>Yhteensä</h2>
+<div class="tot"><span>Kilometrit</span><span id="t1"></span></div>
+<div class="tot"><span>Päivärahat</span><span id="t2"></span></div>
+<div class="tot"><span>Käteislaskut</span><span id="t3"></span></div>
+<div class="tot big"><span>Yhteensä</span><span id="t4"></span></div>
+<div class="bar"><button class="p" id="go">Luo PDF</button><button id="saveB">Tallenna tiedot</button><button id="bk">Lataa varmuuskopio</button><button id="impB">Avaa varmuuskopio</button><input type="file" id="imp" accept=".json,application/json" hidden></div>
+<div id="msg"></div></div>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+<script>
+const KEY='matkalasku-v2';
+let S={s:{company:'',person:'',reg:'',rOsa:24,rKoko:53,rKm:0.59},month:'',trips:[],recs:[],cur:null,name:'',done:false,reports:{},sUpdated:0,prefsDirty:false};
+const RATES={2025:{rOsa:24,rKoko:53,rKm:0.59},2026:{rOsa:25,rKoko:54,rKm:0.55}};
+function applyRates(){const y=+(S.month||'').slice(0,4);const r=RATES[y];if(r&&S.s.rYear!==y)Object.assign(S.s,r,{rYear:y})}
+function rateNote(){const y=+(S.month||'').slice(0,4);const l=' <a href="https://www.vero.fi/henkiloasiakkaat/auto/kilometrikorvaus_ja_paivaraha/" target="_blank" rel="noopener">vero.fi</a>';
+  $('rateNote').innerHTML=RATES[y]?`Määrät ovat Verohallinnon vuoden ${y} päätöksen mukaiset. Voit muokata tarvittaessa. Tarkista:`+l:`Vuodelle ${y||''} ei ole tallennettuja määriä. Tarkista ja syötä ne käsin:`+l}
+function addDays(iso,n=1){if(!iso)return'';const [y,m,d]=iso.split('-').map(Number);return new Date(Date.UTC(y,m-1,d+n)).toISOString().slice(0,10)}
+const uid=()=>Math.random().toString(36).slice(2,10);
+const stamp=()=>new Date().toLocaleTimeString('fi-FI',{hour:'2-digit',minute:'2-digit'});
+const idbOp=async(mode,fn)=>{try{const db=await new Promise((res,rej)=>{const q=indexedDB.open('matkalasku',1);q.onupgradeneeded=()=>q.result.createObjectStore('f');q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)});
+  return await new Promise((res,rej)=>{const t=db.transaction('f',mode),r=fn(t.objectStore('f'));t.oncomplete=()=>res(r&&r.result);t.onerror=()=>rej(t.error)})}catch(e){return null}};
+const fput=(id,f)=>idbOp('readwrite',st=>st.put(f,id)),fdel=id=>idbOp('readwrite',st=>st.delete(id)),fget=id=>idbOp('readonly',st=>st.get(id));
+const b64=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(f)});
+const ymNow=()=>{const t=new Date();return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')};
+const defDate=()=>{const m=S.month||ymNow();const t=new Date();return m===ymNow()?m+'-'+String(t.getDate()).padStart(2,'0'):m+'-01'};
+const nextDate=d=>{const n=addDays(d);return n&&(!S.month||n.slice(0,7)===S.month)?n:defDate()};
+
+const MN=['tammikuu','helmikuu','maaliskuu','huhtikuu','toukokuu','kesäkuu','heinäkuu','elokuu','syyskuu','lokakuu','marraskuu','joulukuu'];
+const mlabel=m=>{const [y,mo]=(m||'').split('-');return MN[mo-1]?MN[mo-1]+' '+y:'Ei kuukautta'};
+const shiftMonth=(ym,n)=>{const [y,m]=ym.split('-').map(Number);return new Date(Date.UTC(y,m-1+n,1)).toISOString().slice(0,7)};
+const moveDate=(iso,ym)=>{const [y,m]=ym.split('-').map(Number);const last=new Date(Date.UTC(y,m,0)).getUTCDate();return ym+'-'+String(Math.min(+iso.slice(8,10)||1,last)).padStart(2,'0')};
+const sortedIds=()=>Object.keys(S.reports).sort((a,b)=>{const A=S.reports[a],B=S.reports[b];return (B.month||'').localeCompare(A.month||'')||(B.updated||0)-(A.updated||0)});
+const plain=o=>JSON.parse(JSON.stringify(o,(k,v)=>k==='f'?undefined:v));
+function commit(){if(!S.cur)return;const p=S.reports[S.cur]||{};S.reports[S.cur]={id:S.cur,name:S.name,month:S.month,done:S.done,trips:S.trips,recs:S.recs,updated:p.updated||0,synced:!!p.synced}}
+function mk(o){const id=uid();S.reports[id]={id,name:'',month:ymNow(),done:false,trips:[],recs:[],updated:Date.now(),synced:false,...(o||{})};S.cur=id;return id}
+function loadCur(){const r=S.reports[S.cur];S.name=r.name||'';S.month=r.month||ymNow();S.done=!!r.done;S.trips=r.trips||[];S.recs=r.recs||[];S.recs.forEach(x=>{if(!x.id)x.id=uid()});applyRates();loadFiles()}
+async function loadFiles(){let ch=false;for(const x of S.recs){if(!x.f){const f=await fget(x.id);if(f){x.f=f;x.hf=true;ch=true}}}if(ch)render()}
+function loadLocal(){
+  try{
+    const r=localStorage.getItem(KEY);
+    if(r){const o=JSON.parse(r);S.s={...S.s,...o.s};S.reports=o.reports||{};S.cur=o.cur;S.sUpdated=o.sUpdated||0}
+    else{const v=localStorage.getItem('matkalasku-v1');if(v){const o=JSON.parse(v);S.s={...S.s,...o.s};mk({month:o.month||ymNow(),trips:o.trips||[],recs:(o.recs||[]).map(x=>({...x,id:x.id||uid()}))})}}
+  }catch(e){}
+  if(!S.cur||!S.reports[S.cur]){const ids=sortedIds();if(ids.length)S.cur=ids[0];else mk()}
+  loadCur();
+}
+let cloudState='',localStamp='',tmr=null;
+const showSt=()=>{const e=document.getElementById('saved');if(e)e.textContent=[localStamp?'Tallennettu selaimeen '+localStamp:'',cloudState].filter(Boolean).join(' · ')};
+function writeLocal(){try{commit();localStorage.setItem(KEY,JSON.stringify({s:S.s,cur:S.cur,sUpdated:S.sUpdated,reports:S.reports},(k,v)=>k==='f'?undefined:v));localStamp=stamp();showSt();return true}catch(e){const el=document.getElementById('saved');if(el)el.textContent='Tallennus selaimeen ei onnistu. Lataa varmuuskopio.';return false}}
+function save(){commit();const r=S.reports[S.cur];r.updated=Date.now();r.synced=false;writeLocal()}
+function renderRepList(){commit();$('repSel').innerHTML=sortedIds().map(id=>{const r=S.reports[id];return `<option value="${id}"${id===S.cur?' selected':''}>${esc(mlabel(r.month))} · ${esc(r.name||'Nimetön')}${r.done?' ✓':' (luonnos)'}</option>`}).join('')}
+function renderRep(){renderRepList();$('repName').value=S.name;$('repDone').checked=S.done}
+function switchTo(id){if(!S.reports[id])return;commit();S.cur=id;loadCur();writeLocal();render()}
+function newReport(copy){commit();
+  if(copy){const nm=shiftMonth(S.month||ymNow(),1);mk({name:S.name?S.name+' (kopio)':'',month:nm,trips:S.trips.map(t=>({...t,d:t.d?moveDate(t.d,nm):''}))})}
+  else mk();
+  loadCur();save();render()}
+function delReport(){if(!confirm('Poistetaanko tämä kirjaus (ajot ja kuitit) kokonaan?'))return;
+  const id=S.cur;S.recs.forEach(x=>fdel(x.id));delete S.reports[id];
+  const ids=sortedIds();if(ids.length)S.cur=ids[0];else mk();
+  loadCur();writeLocal();render()}
+const $=id=>document.getElementById(id);
+const money=n=>{const [a,b]=Math.abs(n).toFixed(2).split('.');return (n<0?'-':'')+a.replace(/\B(?=(\d{3})+(?!\d))/g,' ')+','+b+' €'};
+const fd=iso=>{if(!iso)return'';const [y,m,d]=iso.split('-');return +d+'.'+ +m+'.'+y};
+const num=v=>parseFloat(String(v).replace(',','.'))||0;
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+
+function calc(t){
+  const km=num(t.km),h=num(t.h),s=S.s;
+  const kmE=km*num(s.rKm);
+  let pd=t.pd||'auto',dp=0;
+  if(pd==='auto')pd=h>=10?'koko':h>=6?'osa':'ei';
+  dp=pd==='koko'?num(s.rKoko):pd==='osa'?num(s.rOsa):0;
+  return {kmE,dp,tot:kmE+dp};
+}
+function totals(){
+  let k=0,d=0,r=0;
+  S.trips.forEach((t,i)=>{const c=calc(t);k+=c.kmE;d+=c.dp;const a=$('ck'+i);if(a){a.textContent=money(c.kmE);$('cd'+i).textContent=money(c.dp);$('ct'+i).innerHTML='<b>'+money(c.tot)+'</b>'}});
+  S.recs.forEach(x=>r+=num(x.a));
+  $('t1').textContent=money(k);$('t2').textContent=money(d);$('t3').textContent=money(r);$('t4').textContent=money(k+d+r);
+  return {k,d,r};
+}
+function render(){
+  document.querySelectorAll('[data-s]').forEach(i=>i.value=S.s[i.dataset.s]);
+  $('month').value=S.month;
+  $('tb').innerHTML=S.trips.map((t,i)=>`<tr>
+<td><input type="date" data-t="${i}" data-k="d" value="${esc(t.d)}"></td>
+<td><input data-t="${i}" data-k="c" value="${esc(t.c)}" style="min-width:90px"></td>
+<td><input data-t="${i}" data-k="r" value="${esc(t.r)}" style="min-width:170px"></td>
+<td><input type="number" data-t="${i}" data-k="km" value="${esc(t.km)}" style="width:75px"></td>
+<td><input type="number" step="0.25" data-t="${i}" data-k="h" value="${esc(t.h)}" style="width:70px"></td>
+<td><select data-t="${i}" data-k="pd">${[['auto','Auto'],['ei','Ei'],['osa','Osa'],['koko','Koko']].map(([v,l])=>`<option value="${v}"${(t.pd||'auto')===v?' selected':''}>${l}</option>`).join('')}</select></td>
+<td class="n" id="ck${i}"></td><td class="n" id="cd${i}"></td><td class="n" id="ct${i}"></td>
+<td style="white-space:nowrap"><button class="x" data-a="dup" data-i="${i}" title="Kopioi rivi">⧉</button><button class="x" data-a="del" data-i="${i}" title="Poista">✕</button></td></tr>`).join('');
+  $('rb').innerHTML=S.recs.map((x,i)=>`<tr>
+<td><input type="date" data-r="${i}" data-k="d" value="${esc(x.d)}"></td>
+<td><input data-r="${i}" data-k="t" value="${esc(x.t)}" style="min-width:160px"></td>
+<td><input type="number" step="0.01" data-r="${i}" data-k="a" value="${esc(x.a)}" style="width:100px"></td>
+<td>${x.f?`<span class="file">📎 ${esc(x.f.name)}</span> <button class="x" data-a="reread" data-i="${i}" title="Lue tiedot uudelleen">↻</button><button class="x" data-a="rmf" data-i="${i}" title="Poista liite">✕</button>`:`${x.hf?'<div class="note">Liite on toisella laitteella. Lisää se uudelleen:</div>':''}<input type="file" class="file" accept="application/pdf,image/jpeg,image/png" data-r="${i}" data-k="f">`}</td>
+<td><button class="x" data-a="delr" data-i="${i}" title="Poista">✕</button></td></tr>`).join('');
+  renderRep();rateNote();totals();
+}
+document.addEventListener('input',e=>{
+  const el=e.target;
+  if(el.id==='repSel'){if(el.value!==S.cur)switchTo(el.value);return}
+  if(el.id==='repName'){S.name=el.value;renderRepList()}
+  else if(el.id==='repDone'){S.done=el.checked;renderRepList()}
+  else if(el.dataset.s){S.s[el.dataset.s]=el.value;S.sUpdated=Date.now();S.prefsDirty=true;totals();}
+  else if(el.id==='month'){S.month=el.value;applyRates();render()}
+  else if(el.dataset.t!==undefined)S.trips[el.dataset.t][el.dataset.k]=el.value,totals();
+  else if(el.dataset.r!==undefined){const x=S.recs[el.dataset.r];if(el.dataset.k==='f'){if(el.files[0]){x.f=el.files[0];x.hf=true;fput(x.id,x.f);render();attach(x,false)}}else{x[el.dataset.k]=el.value;if(el.dataset.k==='d')x.dp=false;if(el.dataset.k==='t')x.ta=false;totals()}}
+  el.classList&&el.classList.remove('auto');save();
+});
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button[data-a]');if(!b)return;
+  const i=+b.dataset.i,a=b.dataset.a;
+  if(a==='reread'){attach(S.recs[i],true);return}
+  if(a==='del')S.trips.splice(i,1);
+  if(a==='dup')S.trips.splice(i+1,0,{...S.trips[i],d:nextDate(S.trips[i].d)});
+  if(a==='delr'){fdel(S.recs[i].id);S.recs.splice(i,1)}
+  if(a==='rmf'){S.recs[i].f=null;S.recs[i].hf=false;fdel(S.recs[i].id)}
+  save();render();
+});
+$('addT').onclick=()=>{const l=S.trips[S.trips.length-1]||{};S.trips.push({d:l.d?nextDate(l.d):defDate(),c:l.c||'Työajo',r:l.r||'',km:l.km||'',h:l.h||'',pd:'auto'});save();render()};
+$('addR').onclick=()=>{S.recs.push({id:uid(),d:defDate(),dp:true,t:'',a:'',f:null});save();render()};
+
+function parseText(t){
+  t=t.replace(/\s+/g,' ');
+  const dates=[...t.matchAll(/(\d{1,2})\.(\d{1,2})\.(\d{4})/g)].map(m=>({i:m.index,v:`${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`}));
+  const near=re=>{const k=t.search(re);if(k<0)return null;const d=dates.find(x=>x.i>=k&&x.i-k<60);return d?d.v:null};
+  const date=near(/er[aä]p[aä]iv[aä]|due date|maksup[aä]iv[aä]/i)||near(/laskun ?p[aä]iv[aä]m[aä][aä]r[aä]|laskup[aä]iv[aä]|invoice date|p[aä]iv[aä]ys/i)||(dates[0]&&dates[0].v)||null;
+  const N='(\\d[\\d\\s\\u00A0]*,\\d{2})';
+  const pats=['arvonlis[aä]verollinen[^\\d]{0,40}?','(?:maksettava|maksettu|korttimaksu|loppusumma|amount due|total due|grand total)[^\\d]{0,30}?','(?:^|\\s)summa[^\\d]{0,15}?','yhteens[aä][^\\d]{0,30}?'];
+  let amount=null;
+  for(const p of pats){
+    const ms=[...t.matchAll(new RegExp(p+N,'gi'))].filter(m=>!/veroton/i.test(t.slice(Math.max(0,m.index-30),m.index+10)));
+    if(ms.length){const m=ms[p.startsWith('yhteens')?ms.length-1:0];amount=num(m[1].replace(/[\s\u00A0]/g,''))}
+    if(amount!=null)break;
+  }
+  return {date,amount};
+}
+const tmo=(p,ms)=>{let t;return Promise.race([p,new Promise((_,rej)=>{t=setTimeout(()=>rej(new Error('timeout')),ms)})]).finally(()=>clearTimeout(t))};
+async function pdfDoc(f){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';return pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise}
+async function pdfText(f){const d=await pdfDoc(f);let s='';for(let p=1;p<=Math.min(6,d.numPages);p++){const c=await(await d.getPage(p)).getTextContent();s+=` --- sivu ${p}/${d.numPages} --- `+c.items.map(i=>i.str).join(' ')+' '}return s}
+const okDate=d=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(d||''))return false;const dt=new Date(d+'T00:00:00Z');if(isNaN(dt)||dt.toISOString().slice(0,10)!==d)return false;const y=+d.slice(0,4),my=+(S.month||'').slice(0,4)||new Date().getFullYear();return Math.abs(y-my)<=1};
+const okAmt=a=>typeof a==='number'&&isFinite(a)&&a>0&&a<100000;
+async function attach(x,force,lbl){
+  const f=x.f,n=f.name.toLowerCase(),isPdf=f.type==='application/pdf'||n.endsWith('.pdf');
+  const t0=Date.now(),tick=()=>say(`Luetaan liitettä ${lbl||''}… ${Math.round((Date.now()-t0)/1000)} s`),iv=setInterval(tick,1000);tick();
+  let text='',r=null,src='';
+  try{
+    if(isPdf){try{text=await tmo(pdfText(f),15000)}catch(e){}}
+    if(!r&&text){try{const p=parseText(text);r={date:p.date,amount:p.amount,vendor:null};src='text'}catch(e){}}
+  }finally{clearInterval(iv)}
+  if(!S.recs.includes(x))return;
+  r=r||{};
+  const set=(k,v,fo)=>{if(v==null||v===''||(x[k]&&!fo&&!(k==='d'&&x.dp)))return;x[k]=String(v);if(k==='d')x.dp=false;const el=document.querySelector(`[data-r="${S.recs.indexOf(x)}"][data-k="${k}"]`);if(el){el.value=x[k];if(k!=='t')el.classList.add('auto')}};
+  const dOk=okDate(r.date),aOk=okAmt(r.amount);
+  if(dOk)set('d',r.date,force);
+  if(aOk)set('a',r.amount.toFixed(2),force);
+  const ven=typeof r.vendor==='string'&&r.vendor.trim()?r.vendor.trim():'';
+  const desc=ven?ven+' '+(r.kind==='kuitti'?'kuitti':r.kind==='lasku'?'lasku':'maksu'):f.name.replace(/\.[^.]+$/,'');
+  if(!x.t||(force&&x.ta)){x.t=desc;x.ta=true;const te=document.querySelector(`[data-r="${S.recs.indexOf(x)}"][data-k="t"]`);if(te)te.value=desc}
+  save();totals();
+  if(!dOk&&!aOk)say(isPdf?'Tietoja ei löytynyt PDF:n tekstistä (esim. skannattu PDF). Täytä päivä ja summa käsin.':'Kuvasta ei voi lukea tietoja automaattisesti. Täytä päivä, summa ja kuvaus käsin.',true);
+  else say((src==='text'?'Luettu tekstistä (arvio). ':'Luettu. ')+(typeof r.note==='string'&&r.note.trim()?'Huomio: '+r.note.trim()+'. ':'')+'Keltaiset kentät kannattaa tarkistaa'+(dOk&&aOk?'.':'. Osa tiedoista puuttuu, täytä ne käsin.'),!(dOk&&aOk));
+}
+function saveFile(name,data,type){const b=new Blob([data],{type}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),5000)}
+const say=(t,err)=>{$('msg').textContent=t;$('msg').style.color=err?'#c0392b':'inherit'};
+$('go').onclick=async()=>{
+  const btn=$('go');btn.disabled=true;say('Luodaan PDF…');
+  try{
+    if(!window.PDFLib)throw new Error('PDF-kirjasto ei latautunut.');
+    const out=await build();
+    saveFile(`matkalasku_${S.month||'kuukausi'}.pdf`,out,'application/pdf');
+    say(window.__skipped&&window.__skipped.length?'Valmis, mutta näitä liitteitä ei voitu lisätä: '+window.__skipped.join(', '):'Valmis. '+(window.__att||0)+' kuittia liitetty PDF:ään.',!!(window.__skipped&&window.__skipped.length));
+  }catch(e){say(e.code==='declined'?'Tallennus peruttiin.':(e.message||'Virhe PDF:n luonnissa.'),true)}
+  btn.disabled=false;
+};
+
+async function build(){
+  const {PDFDocument,StandardFonts,rgb}=PDFLib;
+  const doc=await PDFDocument.create();
+  const F=await doc.embedFont(StandardFonts.Helvetica),B=await doc.embedFont(StandardFonts.HelveticaBold);
+  const clean=s=>String(s??'').replace(/[\u2013\u2014]/g,'-').replace(/[^\x20-\x7E\xA0-\xFF€]/g,'?');
+  let pg,y;
+  const T=(s,x,yy,o={})=>{s=clean(s);const f=o.b?B:F,sz=o.sz||9;
+    if(o.max){while(s.length>1&&f.widthOfTextAtSize(s,sz)>o.max)s=s.slice(0,-1)}
+    const w=f.widthOfTextAtSize(s,sz);pg.drawText(s,{x:o.r?x-w:o.c?x-w/2:x,y:yy,size:sz,font:f,color:rgb(.1,.1,.1)})};
+  const L=(yy)=>pg.drawLine({start:{x:40,y:yy},end:{x:802,y:yy},thickness:.5,color:rgb(.7,.7,.7)});
+  const newPage=()=>{pg=doc.addPage([842,595]);y=555};
+  newPage();
+  const s=S.s,[yr,mo]=(S.month||'').split('-');
+  T(s.company,40,y,{b:1,sz:16});T('Matkalaskut + käteislaskut',40,y-18,{sz:11});
+  T(`Henkilö: ${s.person}`,40,y-38,{b:1,sz:10});T(`Auton rekisterinumero: ${s.reg}`,40,y-52,{sz:10});
+  if(mo)T(`Ajanjakso: ${+mo}/${yr}`,40,y-66,{sz:10});
+  T(`Kotimaan päivärahat ${yr||''}`,802,y,{r:1,b:1,sz:9});
+  T(`6 tuntia tai yli (osapäiväraha)   ${money(num(s.rOsa))}`,802,y-13,{r:1});
+  T(`10 tuntia tai yli (kokopäiväraha)   ${money(num(s.rKoko))}`,802,y-26,{r:1});
+  T(`Kilometrikorvaus / km   ${money(num(s.rKm))}`,802,y-39,{r:1});
+  y-=92;
+  const X={d:40,c:108,r:200,km:440,ke:505,h:545,pd:610,t:802};
+  const head=()=>{T('Päivämäärä',X.d,y,{b:1});T('Kommentti',X.c,y,{b:1});T('Reitti',X.r,y,{b:1});T('Km',X.km,y,{b:1,r:1});T('Km-korv.',X.ke,y,{b:1,r:1});T('Kesto h',X.h,y,{b:1,r:1});T('Päiväraha',X.pd,y,{b:1,r:1});T('Yhteensä',X.t,y,{b:1,r:1});y-=5;L(y);y-=13};
+  head();
+  let K=0,KM=0,D=0;
+  [...S.trips].sort((a,b)=>(a.d||'').localeCompare(b.d||'')).forEach(t=>{
+    if(y<80){newPage();head()}
+    const c=calc(t);K+=c.kmE;D+=c.dp;KM+=num(t.km);
+    T(fd(t.d),X.d,y);T(t.c,X.c,y,{max:88});T(t.r,X.r,y,{max:230});T(String(num(t.km)).replace('.',','),X.km,y,{r:1});
+    T(money(c.kmE),X.ke,y,{r:1});T(String(num(t.h)).replace('.',','),X.h,y,{r:1});T(money(c.dp),X.pd,y,{r:1});T(money(c.tot),X.t,y,{r:1,b:1});
+    y-=5;L(y);y-=13;
+  });
+  if(y<110){newPage()}
+  y-=4;T(`Kilometrit yhteensä (${String(KM).replace('.',',')} km): ${money(K)}`,802,y,{r:1,b:1});
+  y-=14;T(`Päivärahat yhteensä: ${money(D)}`,802,y,{r:1,b:1});
+  y-=26;
+  const RS=[...S.recs].sort((a,b)=>(a.d||'').localeCompare(b.d||'')),pos=new Map(),rng=new Map();let noteSlot=null;
+  if(S.recs.length){
+    if(y<110)newPage();
+    T('Käteislaskut',40,y,{b:1,sz:11});y-=16;
+    let R=0;
+    RS.forEach(x=>{
+      if(y<70)newPage();R+=num(x.a);
+      T(fd(x.d),X.d,y);T(x.t,X.c,y,{max:500});T(money(num(x.a)),X.t,y,{r:1});pos.set(x,{pg,y});y-=5;L(y);y-=13;
+    });
+    y-=4;T(`Käteislaskut yhteensä: ${money(R)}`,802,y,{r:1,b:1});y-=14;noteSlot={pg,y};y-=14;
+  }
+  if(y<60)newPage();
+  const tot=K+D+S.recs.reduce((a,x)=>a+num(x.a),0);
+  y-=6;T(`Matka- ja käteislaskut yhteensä: ${money(tot)}`,802,y,{r:1,b:1,sz:12});
+  // liitteet
+  const skipped=[];
+  for(const x of RS){
+    if(!x.f)continue;
+    const first=doc.getPageCount()+1;
+    const bytes=await x.f.arrayBuffer(),n=x.f.name.toLowerCase();
+    try{
+      if(x.f.type==='application/pdf'||n.endsWith('.pdf')){
+        const src=await PDFDocument.load(bytes,{ignoreEncryption:true});
+        (await doc.copyPages(src,src.getPageIndices())).forEach(p=>doc.addPage(p));
+      }else if(x.f.type==='image/png'||x.f.type==='image/jpeg'||/\.(png|jpe?g)$/.test(n)){
+        const img=(x.f.type==='image/png'||n.endsWith('.png'))?await doc.embedPng(bytes):await doc.embedJpg(bytes);
+        pg=doc.addPage([595,842]);
+        T(`Liite: ${fd(x.d)} ${x.t}`,40,812,{sz:9});
+        const k=Math.min(515/img.width,740/img.height,1.5);
+        pg.drawImage(img,{x:40,y:795-img.height*k,width:img.width*k,height:img.height*k});
+      }else skipped.push(x.f.name);
+    }catch(e){skipped.push(x.f.name)}
+    if(doc.getPageCount()>=first)rng.set(x,[first,doc.getPageCount()]);
+  }
+  if(noteSlot&&rng.size){
+    for(const [x,[a,b]] of rng){const q=pos.get(x);if(q){pg=q.pg;T(a===b?`liite s. ${a}`:`liite s. ${a}-${b}`,745,q.y,{r:1,sz:8})}}
+    const all=[...rng.values()],lo=Math.min(...all.map(v=>v[0])),hi=Math.max(...all.map(v=>v[1])),miss=S.recs.length-rng.size;
+    pg=noteSlot.pg;T(`Kuitit ovat liitteenä tässä tiedostossa (${lo===hi?'sivu '+lo:`sivut ${lo}-${hi}`}).`+(miss?` Ilman liitettä: ${miss} kpl.`:''),40,noteSlot.y,{b:1,sz:9});
+  }
+  window.__att=rng.size;
+  window.__skipped=skipped;
+  return await doc.save();
+}
+$('saveB').onclick=()=>{save();say('Kirjaus tallennettu tähän selaimeen.')};
+$('repNew').onclick=()=>newReport(false);$('repCopy').onclick=()=>newReport(true);$('repDel').onclick=delReport;
+$('bk').onclick=async()=>{try{
+  const recs=[];for(const x of S.recs){const o={...x,f:undefined};if(x.f)o.file={name:x.f.name,type:x.f.type,data:await b64(x.f)};recs.push(o)}
+  saveFile(`matkalasku_varmuuskopio_${S.month||'tiedot'}.json`,JSON.stringify({v:1,name:S.name,s:S.s,month:S.month,trips:S.trips,recs}),'application/json');
+  say('Varmuuskopio tallennettu (sisältää liitteet).');
+}catch(e){say(e.code==='declined'?'Tallennus peruttiin.':(e.message||'Virhe varmuuskopiossa.'),true)}};
+$('impB').onclick=()=>$('imp').click();
+$('imp').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+  try{const o=JSON.parse(await f.text());if(!o||!Array.isArray(o.trips)||!Array.isArray(o.recs))throw 0;
+    if(!confirm('Korvataanko nykyiset tiedot varmuuskopion tiedoilla?'))return;
+    for(const x of S.recs)await fdel(x.id);
+    const recs=[];for(const r of o.recs){const x={id:r.id||uid(),d:r.d||'',t:r.t||'',a:r.a||'',dp:false,f:null};
+      if(r.file){x.f=new File([Uint8Array.from(atob(r.file.data),c=>c.charCodeAt(0))],r.file.name,{type:r.file.type});await fput(x.id,x.f)}recs.push(x)}
+    S={...S,s:{...S.s,...o.s},name:o.name||S.name,month:o.month||S.month,trips:o.trips,recs};save();render();say('Varmuuskopio avattu.');
+  }catch(err){say('Varmuuskopion avaaminen ei onnistunut.',true)}};
+const byDate=(a,b)=>(a.d||'9999').localeCompare(b.d||'9999');
+$('sortR').onclick=()=>{S.recs.sort(byDate);save();render();say('Kuitit järjestetty päivämäärän mukaan.')};
+$('sortT').onclick=()=>{S.trips.sort(byDate);save();render();say('Ajot järjestetty päivämäärän mukaan.')};
+async function addFiles(list){
+  const ok=[],bad=[];
+  for(const f of list){const n=f.name.toLowerCase();(/\.(pdf|jpe?g|png)$/.test(n)||/^(application\/pdf|image\/(jpeg|png))$/.test(f.type)?ok:bad).push(f)}
+  if(!ok.length){say('Tiedostotyyppiä ei tueta. Käytä PDF-, JPG- tai PNG-tiedostoa.',true);return}
+  const added=ok.map(f=>({id:uid(),d:defDate(),dp:true,t:'',a:'',f,hf:true}));
+  added.forEach(x=>{S.recs.push(x);fput(x.id,x.f)});
+  save();render();
+  for(let i=0;i<added.length;i++){await attach(added[i],false,`${i+1}/${added.length}`)}
+  S.recs.sort(byDate);save();render();
+  const miss=added.filter(x=>!x.a||x.dp).length;
+  say(`${added.length} kuittia lisätty.`+(miss?` ${miss} kuitin päivä tai summa jäi puuttumaan, täytä ne käsin.`:' Tarkista keltaiset kentät.')+(bad.length?` Ohitettu (ei tuettu muoto): ${bad.map(f=>f.name).join(', ')}.`:''),!!miss||!!bad.length);
+}
+{const card=$('recCard'),hasFiles=e=>e.dataTransfer&&[...e.dataTransfer.types].includes('Files'),onInput=e=>e.target.matches&&e.target.matches('input[type=file]');
+ ['dragenter','dragover'].forEach(t=>card.addEventListener(t,e=>{if(hasFiles(e)&&!onInput(e)){e.preventDefault();card.classList.add('drag')}}));
+ card.addEventListener('dragleave',e=>{if(!card.contains(e.relatedTarget))card.classList.remove('drag')});
+ card.addEventListener('drop',e=>{card.classList.remove('drag');if(!hasFiles(e)||onInput(e))return;e.preventDefault();addFiles([...e.dataTransfer.files])});
+ ['dragover','drop'].forEach(t=>window.addEventListener(t,e=>{if(hasFiles(e)&&!onInput(e))e.preventDefault()}));
+ $('dz').onclick=()=>$('dzf').click();
+ $('dzf').onchange=e=>{const fl=[...e.target.files];e.target.value='';if(fl.length)addFiles(fl)};}
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+loadLocal();render();
+</script></body></html>
